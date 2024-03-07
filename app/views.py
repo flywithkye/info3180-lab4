@@ -1,6 +1,6 @@
 import os
 from app import app, db, login_manager
-from flask import render_template, request, redirect, url_for, flash, session, abort
+from flask import render_template, request, redirect, url_for, flash, session, abort, send_from_directory
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -24,8 +24,8 @@ def about():
     return render_template('about.html', name="Mary Jane")
 
 
-@login_required
 @app.route('/upload', methods=['POST', 'GET'])
+@login_required
 def upload():
     # Instantiate your form class
     form = UploadForm()
@@ -43,6 +43,22 @@ def upload():
             return redirect(url_for('home')) # Update this to redirect the user to a route that displays all uploaded image files
         flash_errors(form)
     return render_template('upload.html', form=form)
+
+
+@app.route("/uploads/<filename>")
+def get_image(filename):
+    root_dir = os.getcwd()
+
+    return send_from_directory(os.path.join(root_dir, app.config['UPLOAD_FOLDER']), filename)
+
+
+@app.route("/files")
+@login_required
+def files():
+    filenames = get_uploaded_images()
+
+    return render_template('files.html', filenames=filenames)
+
 
 
 @app.route('/login', methods=['POST', 'GET'])
@@ -79,6 +95,13 @@ def login():
 
     return render_template("login.html", form=form)
 
+@app.route('/logout')
+def logout():
+    logout_user()
+    
+    flash('Successfully Logged Out!', 'success')  
+    return redirect(url_for("home")) 
+
 # user_loader callback. This callback is used to reload the user object from
 # the user ID stored in the session
 @login_manager.user_loader
@@ -88,6 +111,16 @@ def load_user(id):
 ###
 # The functions below should be applicable to all Flask apps.
 ###
+
+def get_uploaded_images():
+    filenames = []
+    rootdir = os.getcwd() 
+    
+    for subdir, dirs, files in os.walk(rootdir +  '/uploads'):
+        for filename in files:
+            if filename.endswith('.png') or filename.endswith('.jpg'):
+                filenames.append(os.path.join(subdir, filename).split("\\")[-1])            
+    return filenames
 
 # Flash errors from the form if validation fails
 def flash_errors(form):

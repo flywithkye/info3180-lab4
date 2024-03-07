@@ -2,6 +2,20 @@ body {
     padding-top: 5rem;
 }
 
+#gallery {
+    display: grid;
+    gap: 35px 50px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.pics {
+    width: 300px;
+    height: 300px;
+    object-fit: cover;
+    border: 1px solid #224f93;
+}
+
+
 .form-login {
     max-width: 330px;
     padding: 15px;
